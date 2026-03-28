@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { Card } from "@/components/ui/Card";
@@ -7,22 +7,61 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/Modal";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { MOCK_VEHICLES, MOCK_RESERVATIONS } from "@/lib/mock";
-import { MOCK_MEMBERS, getMemberById } from "@/lib/mock/members";
+import { api } from "@/lib/api";
 import { todayYMD, formatDate, formatTime } from "@/lib/utils/date";
-import type { VehicleReservation } from "@/lib/types";
+import type { VehicleReservation, Vehicle, FamilyMember } from "@/lib/types";
 
 export default function VehicleReservePage() {
   const today = todayYMD();
-  const vehicle = MOCK_VEHICLES[0];
-  const [reservations, setReservations] = useState<VehicleReservation[]>(MOCK_RESERVATIONS);
+  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+  const [reservations, setReservations] = useState<VehicleReservation[]>([]);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   const [formDate, setFormDate] = useState(today);
   const [formStart, setFormStart] = useState("09:00");
   const [formEnd, setFormEnd] = useState("11:00");
   const [formPurpose, setFormPurpose] = useState("");
-  const [formMemberId, setFormMemberId] = useState(MOCK_MEMBERS[0].id);
+  const [formMemberId, setFormMemberId] = useState("");
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const [vehicles, membersData] = await Promise.all([
+          api.get<Vehicle[]>("/vehicles"),
+          api.get<FamilyMember[]>("/members"),
+        ]);
+        setMembers(membersData);
+        if (membersData.length > 0) setFormMemberId(membersData[0].id);
+        if (vehicles.length > 0) {
+          const v = vehicles[0];
+          setVehicle(v);
+          const reservationsData = await api.get<VehicleReservation[]>(
+            `/vehicles/${v.id}/reservations`
+          );
+          setReservations(reservationsData);
+        }
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "오류가 발생했어요");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (error) return (
+    <EmptyState icon="⚠️" message="데이터를 불러오지 못했어요" sub={error} />
+  );
 
   const sorted = [...reservations].sort((a, b) =>
     a.startTime.localeCompare(b.startTime)
@@ -30,29 +69,32 @@ export default function VehicleReservePage() {
   const todayReservations = sorted.filter((r) => r.startTime.startsWith(today));
   const upcomingReservations = sorted.filter((r) => r.startTime > `${today}T99`);
 
-  const handleAdd = () => {
-    if (!formDate || !formStart || !formEnd) return;
-    setReservations((prev) => [
-      ...prev,
-      {
-        id: `r-${Date.now()}`,
-        vehicleId: vehicle.id,
-        memberId: formMemberId,
-        startTime: `${formDate}T${formStart}:00`,
-        endTime: `${formDate}T${formEnd}:00`,
-        purpose: formPurpose || undefined,
-      },
-    ]);
+  const handleAdd = async () => {
+    if (!formDate || !formStart || !formEnd || !vehicle) return;
+    try {
+      const created = await api.post<VehicleReservation>(
+        `/vehicles/${vehicle.id}/reservations`,
+        {
+          memberId: formMemberId,
+          startTime: `${formDate}T${formStart}:00`,
+          endTime: `${formDate}T${formEnd}:00`,
+          purpose: formPurpose || undefined,
+        }
+      );
+      setReservations((prev) => [...prev, created]);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "오류가 발생했어요");
+    }
     setModalOpen(false);
     setFormDate(today);
     setFormStart("09:00");
     setFormEnd("11:00");
     setFormPurpose("");
-    setFormMemberId(MOCK_MEMBERS[0].id);
+    setFormMemberId(members[0]?.id ?? "");
   };
 
   const ReservationRow = ({ r }: { r: VehicleReservation }) => {
-    const member = getMemberById(r.memberId);
+    const member = members.find((m) => m.id === r.memberId);
     const isToday = r.startTime.startsWith(today);
     return (
       <div className="flex items-center gap-3 py-3 border-b border-gray-50 last:border-0">
@@ -94,21 +136,23 @@ export default function VehicleReservePage() {
       />
       <div className="px-4 py-5 max-w-2xl tablet:max-w-3xl mx-auto space-y-4">
         {/* 차량 정보 */}
-        <Card className="flex items-center gap-4 p-4">
-          <div className="w-12 h-12 bg-primary-light rounded-xl flex items-center justify-center text-2xl">
-            🚗
-          </div>
-          <div>
-            <p className="font-semibold text-text-base">{vehicle.name}</p>
-            <p className="text-sm text-text-muted">{vehicle.plateNumber}</p>
-          </div>
-          <div className="ml-auto">
-            <Button size="sm" onClick={() => setModalOpen(true)}>
-              <Plus size={16} />
-              예약하기
-            </Button>
-          </div>
-        </Card>
+        {vehicle && (
+          <Card className="flex items-center gap-4 p-4">
+            <div className="w-12 h-12 bg-primary-light rounded-xl flex items-center justify-center text-2xl">
+              🚗
+            </div>
+            <div>
+              <p className="font-semibold text-text-base">{vehicle.name}</p>
+              <p className="text-sm text-text-muted">{vehicle.plateNumber}</p>
+            </div>
+            <div className="ml-auto">
+              <Button size="sm" onClick={() => setModalOpen(true)}>
+                <Plus size={16} />
+                예약하기
+              </Button>
+            </div>
+          </Card>
+        )}
 
         {/* 오늘 예약 */}
         <section>
@@ -183,7 +227,7 @@ export default function VehicleReservePage() {
               onChange={(e) => setFormMemberId(e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white"
             >
-              {MOCK_MEMBERS.map((m) => (
+              {members.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.name}
                 </option>

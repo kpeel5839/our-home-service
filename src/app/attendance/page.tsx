@@ -1,15 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { MOCK_ATTENDANCE } from "@/lib/mock";
-import { MOCK_MEMBERS } from "@/lib/mock/members";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { api } from "@/lib/api";
 import { todayYMD } from "@/lib/utils/date";
-import type { AttendanceStatus, AttendanceStatusType } from "@/lib/types";
-import type { FamilyMember } from "@/lib/types";
+import type { AttendanceStatus, AttendanceStatusType, FamilyMember } from "@/lib/types";
 
 const STATUS_CONFIG: Record<
   AttendanceStatusType,
@@ -22,11 +21,43 @@ const STATUS_CONFIG: Record<
 
 export default function AttendancePage() {
   const today = todayYMD();
-  const [attendances, setAttendances] = useState<AttendanceStatus[]>(MOCK_ATTENDANCE);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [attendances, setAttendances] = useState<AttendanceStatus[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
   const [editStatus, setEditStatus] = useState<AttendanceStatusType>("UNKNOWN");
   const [editReturnTime, setEditReturnTime] = useState("");
   const [editMemo, setEditMemo] = useState("");
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const [membersData, attendanceData] = await Promise.all([
+          api.get<FamilyMember[]>("/members"),
+          api.get<AttendanceStatus[]>(`/attendance?date=${today}`),
+        ]);
+        setMembers(membersData);
+        setAttendances(attendanceData);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "오류가 발생했어요");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (error) return (
+    <EmptyState icon="⚠️" message="데이터를 불러오지 못했어요" sub={error} />
+  );
 
   const getAttendance = (memberId: string) =>
     attendances.find((a) => a.date === today && a.memberId === memberId);
@@ -39,24 +70,30 @@ export default function AttendancePage() {
     setEditMemo(att?.memo ?? "");
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedMember) return;
-    setAttendances((prev) => {
-      const filtered = prev.filter(
-        (a) => !(a.date === today && a.memberId === selectedMember.id)
-      );
-      return [
-        ...filtered,
-        {
-          id: `a-${Date.now()}`,
+    const existing = getAttendance(selectedMember.id);
+    try {
+      if (existing) {
+        const updated = await api.patch<AttendanceStatus>(`/attendance/${existing.id}`, {
+          status: editStatus,
+          expectedReturnTime: editReturnTime || undefined,
+          memo: editMemo || undefined,
+        });
+        setAttendances((prev) => prev.map((a) => (a.id === existing.id ? updated : a)));
+      } else {
+        const created = await api.post<AttendanceStatus>("/attendance", {
           date: today,
           memberId: selectedMember.id,
           status: editStatus,
           expectedReturnTime: editReturnTime || undefined,
           memo: editMemo || undefined,
-        },
-      ];
-    });
+        });
+        setAttendances((prev) => [...prev, created]);
+      }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "저장에 실패했어요");
+    }
     setSelectedMember(null);
   };
 
@@ -68,7 +105,7 @@ export default function AttendancePage() {
           <h1 className="text-2xl font-bold text-text-base">귀가/외박 현황</h1>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {MOCK_MEMBERS.map((member) => {
+          {members.map((member) => {
             const att = getAttendance(member.id);
             const status = att?.status ?? "UNKNOWN";
             const config = STATUS_CONFIG[status];

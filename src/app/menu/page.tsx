@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { Modal } from "@/components/ui/Modal";
-import { MOCK_MENUS } from "@/lib/mock";
-import { getMemberById } from "@/lib/mock/members";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { api } from "@/lib/api";
 import { todayYMD } from "@/lib/utils/date";
-import type { DailyMenu, MealType } from "@/lib/types";
+import type { DailyMenu, MealType, FamilyMember } from "@/lib/types";
 
 const MEAL_LABELS: Record<MealType, string> = {
   BREAKFAST: "아침",
@@ -23,11 +23,43 @@ const MEAL_EMOJI: Record<MealType, string> = {
 
 export default function MenuPage() {
   const today = todayYMD();
-  const [menus, setMenus] = useState<DailyMenu[]>(MOCK_MENUS);
+  const [menus, setMenus] = useState<DailyMenu[]>([]);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMealType, setEditingMealType] = useState<MealType | null>(null);
   const [menuName, setMenuName] = useState("");
   const [description, setDescription] = useState("");
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const [data, membersData] = await Promise.all([
+          api.get<DailyMenu[]>(`/menus?date=${today}`),
+          api.get<FamilyMember[]>("/members"),
+        ]);
+        setMenus(data);
+        setMembers(membersData);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "오류가 발생했어요");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (error) return (
+    <EmptyState icon="⚠️" message="데이터를 불러오지 못했어요" sub={error} />
+  );
 
   const todayMenus = menus.filter((m) => m.date === today);
 
@@ -42,24 +74,29 @@ export default function MenuPage() {
     setModalOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editingMealType || !menuName.trim()) return;
-    setMenus((prev) => {
-      const filtered = prev.filter(
-        (m) => !(m.date === today && m.mealType === editingMealType)
-      );
-      return [
-        ...filtered,
-        {
-          id: `mn-${Date.now()}`,
+    const existing = getMenu(editingMealType);
+    try {
+      if (existing) {
+        const updated = await api.put<DailyMenu>(`/menus/${existing.id}`, {
+          menuName: menuName.trim(),
+          description: description.trim() || undefined,
+        });
+        setMenus((prev) => prev.map((m) => (m.id === existing.id ? updated : m)));
+      } else {
+        const created = await api.post<DailyMenu>("/menus", {
           date: today,
           mealType: editingMealType,
           menuName: menuName.trim(),
           description: description.trim() || undefined,
           registeredBy: "m1",
-        },
-      ];
-    });
+        });
+        setMenus((prev) => [...prev, created]);
+      }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "저장에 실패했어요");
+    }
     setModalOpen(false);
     setMenuName("");
     setDescription("");
@@ -76,7 +113,7 @@ export default function MenuPage() {
         <div className="flex flex-col gap-3">
           {(["BREAKFAST", "LUNCH", "DINNER"] as MealType[]).map((mealType) => {
             const menu = getMenu(mealType);
-            const registeredBy = menu ? getMemberById(menu.registeredBy) : null;
+            const registeredBy = menu ? members.find((m) => m.id === menu.registeredBy) : null;
             return (
               <Card key={mealType} className="p-4">
                 <div className="flex items-start justify-between gap-3">

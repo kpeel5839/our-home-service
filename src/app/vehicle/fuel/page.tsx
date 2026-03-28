@@ -1,17 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Fuel } from "lucide-react";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { MOCK_FUEL_RECORDS, MOCK_VEHICLES } from "@/lib/mock";
+import { api } from "@/lib/api";
 import { todayYMD, formatDate } from "@/lib/utils/date";
-import type { FuelRecord } from "@/lib/types";
+import type { FuelRecord, Vehicle } from "@/lib/types";
 
 export default function VehicleFuelPage() {
-  const vehicle = MOCK_VEHICLES[0];
-  const [records, setRecords] = useState<FuelRecord[]>(MOCK_FUEL_RECORDS);
+  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+  const [records, setRecords] = useState<FuelRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   const [formDate, setFormDate] = useState(todayYMD());
@@ -19,24 +21,54 @@ export default function VehicleFuelPage() {
   const [formAmount, setFormAmount] = useState("");
   const [formStation, setFormStation] = useState("");
 
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const vehicles = await api.get<Vehicle[]>("/vehicles");
+        if (vehicles.length > 0) {
+          const v = vehicles[0];
+          setVehicle(v);
+          const fuelData = await api.get<FuelRecord[]>(`/vehicles/${v.id}/fuel`);
+          setRecords(fuelData);
+        }
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "오류가 발생했어요");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (error) return (
+    <EmptyState icon="⚠️" message="데이터를 불러오지 못했어요" sub={error} />
+  );
+
   const sorted = [...records].sort((a, b) => b.date.localeCompare(a.date));
   const totalLiters = records.reduce((sum, r) => sum + r.liters, 0);
   const totalAmount = records.reduce((sum, r) => sum + r.amount, 0);
 
-  const handleAdd = () => {
-    if (!formDate || !formLiters || !formAmount) return;
-    setRecords((prev) => [
-      ...prev,
-      {
-        id: `f-${Date.now()}`,
-        vehicleId: vehicle.id,
+  const handleAdd = async () => {
+    if (!formDate || !formLiters || !formAmount || !vehicle) return;
+    try {
+      const created = await api.post<FuelRecord>(`/vehicles/${vehicle.id}/fuel`, {
         memberId: "m1",
         date: formDate,
         liters: parseFloat(formLiters),
         amount: parseInt(formAmount),
         stationName: formStation || undefined,
-      },
-    ]);
+      });
+      setRecords((prev) => [...prev, created]);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "오류가 발생했어요");
+    }
     setModalOpen(false);
     setFormDate(todayYMD());
     setFormLiters("");
@@ -66,7 +98,7 @@ export default function VehicleFuelPage() {
               <Fuel size={20} className="text-amber-500" />
             </div>
             <div>
-              <p className="font-semibold text-text-base">{vehicle.name}</p>
+              <p className="font-semibold text-text-base">{vehicle?.name ?? ""}</p>
               <p className="text-xs text-text-muted">주유 기록 요약</p>
             </div>
             <Button size="sm" onClick={() => setModalOpen(true)} className="ml-auto hidden lg:flex">

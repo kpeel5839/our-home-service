@@ -1,14 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircle2, Circle } from "lucide-react";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { MOCK_TRASH_SCHEDULES, MOCK_TRASH_RULES } from "@/lib/mock";
-import { getMemberById } from "@/lib/mock/members";
+import { api } from "@/lib/api";
 import { todayYMD, relativeDay } from "@/lib/utils/date";
-import type { TrashSchedule, TrashType } from "@/lib/types";
+import type { TrashSchedule, TrashType, ApartmentTrashRule, FamilyMember } from "@/lib/types";
 
 const TRASH_LABELS: Record<TrashType, string> = {
   GENERAL: "일반",
@@ -36,19 +35,62 @@ const DAY_LABELS: Record<number, string> = {
 
 export default function TrashPage() {
   const today = todayYMD();
-  const [schedules, setSchedules] = useState<TrashSchedule[]>(MOCK_TRASH_SCHEDULES);
+  const [schedules, setSchedules] = useState<TrashSchedule[]>([]);
+  const [rules, setRules] = useState<ApartmentTrashRule[]>([]);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        // 오늘 + 이번 주 일정 범위 조회
+        const endOfWeek = new Date();
+        endOfWeek.setDate(endOfWeek.getDate() + (6 - endOfWeek.getDay()));
+        const toDate = endOfWeek.toISOString().slice(0, 10);
+
+        const [schedulesData, rulesData, membersData] = await Promise.all([
+          api.get<TrashSchedule[]>(`/trash/schedules?from=${today}&to=${toDate}`),
+          api.get<ApartmentTrashRule[]>("/trash/rules"),
+          api.get<FamilyMember[]>("/members"),
+        ]);
+        setSchedules(schedulesData);
+        setRules(rulesData);
+        setMembers(membersData);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "오류가 발생했어요");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (error) return (
+    <EmptyState icon="⚠️" message="데이터를 불러오지 못했어요" sub={error} />
+  );
 
   const todaySchedules = schedules.filter((s) => s.date === today);
   const upcomingSchedules = schedules.filter((s) => s.date > today);
 
-  const toggleComplete = (id: string) => {
-    setSchedules((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, isCompleted: !s.isCompleted } : s))
-    );
+  const toggleComplete = async (id: string) => {
+    try {
+      const updated = await api.patch<TrashSchedule>(`/trash/schedules/${id}/complete`);
+      setSchedules((prev) => prev.map((s) => (s.id === id ? updated : s)));
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "오류가 발생했어요");
+    }
   };
 
   const renderScheduleItem = (schedule: TrashSchedule) => {
-    const member = getMemberById(schedule.memberId);
+    const member = members.find((m) => m.id === schedule.memberId);
     const dateLabel = relativeDay(new Date(schedule.date));
     return (
       <div
@@ -127,7 +169,7 @@ export default function TrashPage() {
         <section>
           <h2 className="text-sm font-semibold text-text-muted mb-2">배출 규칙</h2>
           <Card className="space-y-3">
-            {MOCK_TRASH_RULES.map((rule) => (
+            {rules.map((rule) => (
               <div key={rule.dayOfWeek} className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center flex-shrink-0">
                   <span className="text-xs font-bold text-primary">

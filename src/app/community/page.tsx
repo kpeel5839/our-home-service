@@ -1,14 +1,50 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Heart, MessageCircle } from "lucide-react";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
-import { MOCK_POSTS } from "@/lib/mock";
-import { getMemberById } from "@/lib/mock/members";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { api } from "@/lib/api";
 import { formatDate } from "@/lib/utils/date";
+import type { Post, FamilyMember } from "@/lib/types";
 
 export default function CommunityPage() {
-  const sorted = [...MOCK_POSTS].sort((a, b) =>
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const [postsResponse, membersData] = await Promise.all([
+          api.get<{ posts: Post[]; nextCursor: string | null }>("/posts?limit=20"),
+          api.get<FamilyMember[]>("/members"),
+        ]);
+        setPosts(postsResponse.posts);
+        setMembers(membersData);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "오류가 발생했어요");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (error) return (
+    <EmptyState icon="⚠️" message="데이터를 불러오지 못했어요" sub={error} />
+  );
+
+  const sorted = [...posts].sort((a, b) =>
     b.createdAt.localeCompare(a.createdAt)
   );
 
@@ -20,7 +56,7 @@ export default function CommunityPage() {
           <h1 className="text-2xl font-bold text-text-base">가족 피드</h1>
         </div>
         {sorted.map((post) => {
-          const author = getMemberById(post.authorId);
+          const author = members.find((m) => m.id === post.authorId);
           if (!author) return null;
           return (
             <Link key={post.id} to={`/community/${post.id}`} className="block">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, MapPin } from "lucide-react";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { Card } from "@/components/ui/Card";
@@ -6,40 +6,76 @@ import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { Modal } from "@/components/ui/Modal";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { MOCK_PARKING_RECORDS, MOCK_VEHICLES } from "@/lib/mock";
-import { getMemberById } from "@/lib/mock/members";
+import { api } from "@/lib/api";
 import { formatDate, formatTime } from "@/lib/utils/date";
-import type { ParkingRecord } from "@/lib/types";
+import type { ParkingRecord, Vehicle, FamilyMember } from "@/lib/types";
 
 export default function VehicleParkingPage() {
-  const vehicle = MOCK_VEHICLES[0];
-  const [records, setRecords] = useState<ParkingRecord[]>(MOCK_PARKING_RECORDS);
+  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+  const [current, setCurrent] = useState<ParkingRecord | null>(null);
+  const [history, setHistory] = useState<ParkingRecord[]>([]);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   const [formFloor, setFormFloor] = useState("");
   const [formZone, setFormZone] = useState("");
   const [formMemo, setFormMemo] = useState("");
 
-  const sorted = [...records].sort((a, b) =>
-    b.recordedAt.localeCompare(a.recordedAt)
-  );
-  const current = sorted[0];
-  const history = sorted.slice(1);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const [vehicles, membersData] = await Promise.all([
+          api.get<Vehicle[]>("/vehicles"),
+          api.get<FamilyMember[]>("/members"),
+        ]);
+        setMembers(membersData);
+        if (vehicles.length > 0) {
+          const v = vehicles[0];
+          setVehicle(v);
+          try {
+            const latest = await api.get<ParkingRecord>(`/vehicles/${v.id}/parking/latest`);
+            setCurrent(latest);
+          } catch {
+            // 최근 주차 기록 없음
+            setCurrent(null);
+          }
+        }
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "오류가 발생했어요");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
-  const handleAdd = () => {
-    if (!formFloor.trim()) return;
-    setRecords((prev) => [
-      {
-        id: `p-${Date.now()}`,
-        vehicleId: vehicle.id,
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (error) return (
+    <EmptyState icon="⚠️" message="데이터를 불러오지 못했어요" sub={error} />
+  );
+
+  const handleAdd = async () => {
+    if (!formFloor.trim() || !vehicle) return;
+    try {
+      const created = await api.post<ParkingRecord>(`/vehicles/${vehicle.id}/parking`, {
         memberId: "m1",
         floor: formFloor.trim(),
         zone: formZone.trim() || undefined,
         memo: formMemo.trim() || undefined,
-        recordedAt: new Date().toISOString(),
-      },
-      ...prev,
-    ]);
+      });
+      setHistory((prev) => current ? [current, ...prev] : prev);
+      setCurrent(created);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "오류가 발생했어요");
+    }
     setModalOpen(false);
     setFormFloor("");
     setFormZone("");
@@ -113,7 +149,7 @@ export default function VehicleParkingPage() {
             <Card className="p-0 overflow-hidden">
               <div className="divide-y divide-gray-50">
                 {history.map((record) => {
-                  const member = getMemberById(record.memberId);
+                  const member = members.find((m) => m.id === record.memberId);
                   return (
                     <div key={record.id} className="flex items-center gap-3 px-4 py-3">
                       <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">

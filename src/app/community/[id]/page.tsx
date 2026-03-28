@@ -1,23 +1,48 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Heart } from "lucide-react";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { MOCK_POSTS } from "@/lib/mock";
-import { getMemberById } from "@/lib/mock/members";
+import { api } from "@/lib/api";
 import { formatDate } from "@/lib/utils/date";
-import type { Post, Comment } from "@/lib/types";
+import type { Post, Comment, FamilyMember } from "@/lib/types";
 
 export default function CommunityDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [posts, setPosts] = useState<Post[]>(MOCK_POSTS);
+  const [post, setPost] = useState<Post | null>(null);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [commentInput, setCommentInput] = useState("");
 
-  const post = posts.find((p) => p.id === id);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const [postData, membersData] = await Promise.all([
+          api.get<Post>(`/posts/${id}`),
+          api.get<FamilyMember[]>("/members"),
+        ]);
+        setPost(postData);
+        setMembers(membersData);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "오류가 발생했어요");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [id]);
 
-  if (!post) {
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (error || !post) {
     return (
       <>
         <TopHeader title="게시글" showBack />
@@ -26,38 +51,29 @@ export default function CommunityDetailPage() {
     );
   }
 
-  const author = getMemberById(post.authorId);
+  const author = members.find((m) => m.id === post.authorId);
   const isLiked = post.likes.includes("m1");
 
-  const toggleLike = () => {
-    setPosts((prev) =>
-      prev.map((p) => {
-        if (p.id !== id) return p;
-        const alreadyLiked = p.likes.includes("m1");
-        return {
-          ...p,
-          likes: alreadyLiked
-            ? p.likes.filter((l) => l !== "m1")
-            : [...p.likes, "m1"],
-        };
-      })
-    );
+  const toggleLike = async () => {
+    try {
+      const result = await api.patch<{ likes: string[] }>(`/posts/${id}/like`, { memberId: "m1" });
+      setPost((prev) => prev ? { ...prev, likes: result.likes } : prev);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "오류가 발생했어요");
+    }
   };
 
-  const handleComment = () => {
+  const handleComment = async () => {
     if (!commentInput.trim()) return;
-    const newComment: Comment = {
-      id: `cm-${Date.now()}`,
-      postId: id!,
-      authorId: "m1",
-      content: commentInput.trim(),
-      createdAt: new Date().toISOString(),
-    };
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === id ? { ...p, comments: [...p.comments, newComment] } : p
-      )
-    );
+    try {
+      const newComment = await api.post<Comment>(`/posts/${id}/comments`, {
+        authorId: "m1",
+        content: commentInput.trim(),
+      });
+      setPost((prev) => prev ? { ...prev, comments: [...prev.comments, newComment] } : prev);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "오류가 발생했어요");
+    }
     setCommentInput("");
   };
 
@@ -123,7 +139,7 @@ export default function CommunityDetailPage() {
           ) : (
             <div className="space-y-3 mb-4">
               {post.comments.map((comment) => {
-                const commentAuthor = getMemberById(comment.authorId);
+                const commentAuthor = members.find((m) => m.id === comment.authorId);
                 return (
                   <div key={comment.id} className="flex gap-2">
                     {commentAuthor && <Avatar member={commentAuthor} size="sm" />}

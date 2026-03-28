@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircle2, Circle, Plus } from "lucide-react";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { Card } from "@/components/ui/Card";
@@ -7,9 +7,9 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { MOCK_CLEANING_TASKS } from "@/lib/mock";
-import { MOCK_MEMBERS, getMemberById } from "@/lib/mock/members";
-import type { CleaningTask, CleaningFrequency } from "@/lib/types";
+import { api } from "@/lib/api";
+import type { CleaningTask, CleaningFrequency, CleaningAssignment, FamilyMember } from "@/lib/types";
+import { todayYMD } from "@/lib/utils/date";
 
 const FREQUENCY_LABELS: Record<CleaningFrequency, string> = {
   DAILY: "매일",
@@ -27,38 +27,87 @@ const FREQUENCY_VARIANT: Record<CleaningFrequency, "default" | "success" | "warn
 
 interface TaskState extends CleaningTask {
   isCompleted: boolean;
+  assignmentId?: string;
 }
 
 export default function CleaningPage() {
-  const [tasks, setTasks] = useState<TaskState[]>(
-    MOCK_CLEANING_TASKS.map((t) => ({ ...t, isCompleted: false }))
-  );
+  const today = todayYMD();
+  const [tasks, setTasks] = useState<TaskState[]>([]);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
-  const [newMemberId, setNewMemberId] = useState(MOCK_MEMBERS[0].id);
+  const [newMemberId, setNewMemberId] = useState("");
   const [newFrequency, setNewFrequency] = useState<CleaningFrequency>("WEEKLY");
 
-  const toggleComplete = (id: string) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, isCompleted: !t.isCompleted } : t))
-    );
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const [tasksData, assignmentsData, membersData] = await Promise.all([
+          api.get<CleaningTask[]>("/cleaning/tasks"),
+          api.get<CleaningAssignment[]>(`/cleaning/assignments?date=${today}`),
+          api.get<FamilyMember[]>("/members"),
+        ]);
+        setMembers(membersData);
+        if (membersData.length > 0) setNewMemberId(membersData[0].id);
+        const merged: TaskState[] = tasksData.map((task) => {
+          const assignment = assignmentsData.find((a) => a.taskId === task.id);
+          return {
+            ...task,
+            isCompleted: assignment?.isCompleted ?? false,
+            assignmentId: assignment?.id,
+          };
+        });
+        setTasks(merged);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "오류가 발생했어요");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (error) return (
+    <EmptyState icon="⚠️" message="데이터를 불러오지 못했어요" sub={error} />
+  );
+
+  const toggleComplete = async (id: string) => {
+    const task = tasks.find((t) => t.id === id);
+    if (!task?.assignmentId) return;
+    try {
+      const updated = await api.patch<CleaningAssignment>(`/cleaning/assignments/${task.assignmentId}/complete`);
+      setTasks((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, isCompleted: updated.isCompleted } : t))
+      );
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "오류가 발생했어요");
+    }
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newName.trim()) return;
-    setTasks((prev) => [
-      ...prev,
-      {
-        id: `c-${Date.now()}`,
+    try {
+      const created = await api.post<CleaningTask>("/cleaning/tasks", {
         name: newName.trim(),
         frequency: newFrequency,
         assignedMemberId: newMemberId,
-        isCompleted: false,
-      },
-    ]);
+      });
+      setTasks((prev) => [...prev, { ...created, isCompleted: false }]);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "오류가 발생했어요");
+    }
     setModalOpen(false);
     setNewName("");
-    setNewMemberId(MOCK_MEMBERS[0].id);
+    setNewMemberId(members[0]?.id ?? "");
     setNewFrequency("WEEKLY");
   };
 
@@ -99,7 +148,7 @@ export default function CleaningPage() {
             ) : (
               <div className="divide-y divide-gray-50">
                 {pending.map((task) => (
-                  <TaskRow key={task.id} task={task} onToggle={toggleComplete} />
+                  <TaskRow key={task.id} task={task} members={members} onToggle={toggleComplete} />
                 ))}
               </div>
             )}
@@ -115,7 +164,7 @@ export default function CleaningPage() {
             <Card className="p-0 overflow-hidden">
               <div className="divide-y divide-gray-50">
                 {completed.map((task) => (
-                  <TaskRow key={task.id} task={task} onToggle={toggleComplete} />
+                  <TaskRow key={task.id} task={task} members={members} onToggle={toggleComplete} />
                 ))}
               </div>
             </Card>
@@ -145,7 +194,7 @@ export default function CleaningPage() {
               onChange={(e) => setNewMemberId(e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 bg-white"
             >
-              {MOCK_MEMBERS.map((m) => (
+              {members.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.name}
                 </option>
@@ -181,12 +230,14 @@ export default function CleaningPage() {
 
 function TaskRow({
   task,
+  members,
   onToggle,
 }: {
   task: TaskState & { isCompleted: boolean };
+  members: FamilyMember[];
   onToggle: (id: string) => void;
 }) {
-  const member = getMemberById(task.assignedMemberId);
+  const member = members.find((m) => m.id === task.assignedMemberId);
   return (
     <div className="flex items-center gap-3 px-4 py-3">
       <button
@@ -216,4 +267,3 @@ function TaskRow({
     </div>
   );
 }
-

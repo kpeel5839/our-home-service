@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
-import { MOCK_MEMBERS } from "@/lib/mock/members";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { api } from "@/lib/api";
+import type { FamilyMember } from "@/lib/types";
 
 const ROLE_LABELS: Record<string, string> = {
   FATHER: "아빠",
@@ -29,19 +31,48 @@ const NOTIFICATION_SETTINGS: NotificationSetting[] = [
   { id: "menu", label: "메뉴 등록 알림", defaultOn: false },
 ];
 
-// 현재 사용자 (첫 번째 멤버 아빠)
-const CURRENT_USER = MOCK_MEMBERS[0];
+const CURRENT_USER_ID = "m1";
 
 export default function SettingsPage() {
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Record<string, boolean>>(
     Object.fromEntries(
       NOTIFICATION_SETTINGS.map((s) => [s.id, s.defaultOn])
     )
   );
 
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const data = await api.get<FamilyMember[]>("/members");
+        setMembers(data);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "오류가 발생했어요");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
   const toggleNotification = (id: string) => {
     setNotifications((prev) => ({ ...prev, [id]: !prev[id] }));
   };
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (error) return (
+    <EmptyState icon="⚠️" message="데이터를 불러오지 못했어요" sub={error} />
+  );
+
+  const currentUser = members.find((m) => m.id === CURRENT_USER_ID) ?? members[0];
 
   return (
     <>
@@ -52,32 +83,34 @@ export default function SettingsPage() {
         </div>
 
         {/* 내 프로필 */}
-        <section>
-          <h2 className="text-sm font-semibold text-text-muted mb-2">내 프로필</h2>
-          <Card className="flex items-center gap-4 p-4">
-            <Avatar member={CURRENT_USER} size="lg" />
-            <div>
-              <p className="font-semibold text-text-base text-lg">{CURRENT_USER.name}</p>
-              <Badge variant="primary" className="mt-1">
-                {ROLE_LABELS[CURRENT_USER.role]}
-              </Badge>
-            </div>
-          </Card>
-        </section>
+        {currentUser && (
+          <section>
+            <h2 className="text-sm font-semibold text-text-muted mb-2">내 프로필</h2>
+            <Card className="flex items-center gap-4 p-4">
+              <Avatar member={currentUser} size="lg" />
+              <div>
+                <p className="font-semibold text-text-base text-lg">{currentUser.name}</p>
+                <Badge variant="primary" className="mt-1">
+                  {ROLE_LABELS[currentUser.role]}
+                </Badge>
+              </div>
+            </Card>
+          </section>
+        )}
 
         {/* 가족 구성원 */}
         <section>
           <h2 className="text-sm font-semibold text-text-muted mb-2">가족 구성원</h2>
           <Card className="p-0 overflow-hidden">
             <div className="divide-y divide-gray-50">
-              {MOCK_MEMBERS.map((member) => (
+              {members.map((member) => (
                 <div key={member.id} className="flex items-center gap-3 px-4 py-3">
                   <Avatar member={member} size="md" />
                   <div className="flex-1">
                     <p className="font-medium text-text-base">{member.name}</p>
                     <p className="text-xs text-text-muted">{ROLE_LABELS[member.role]}</p>
                   </div>
-                  {member.id === CURRENT_USER.id && (
+                  {member.id === CURRENT_USER_ID && (
                     <Badge variant="success">나</Badge>
                   )}
                 </div>

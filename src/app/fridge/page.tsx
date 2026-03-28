@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Thermometer, Snowflake, Package } from "lucide-react";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { Card } from "@/components/ui/Card";
@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { MOCK_FRIDGE_ITEMS } from "@/lib/mock";
+import { api } from "@/lib/api";
 import { formatDDay, getExpiryStatus } from "@/lib/utils/expiry";
 import { todayYMD } from "@/lib/utils/date";
 import type { FridgeItem, FridgeCategory, StorageType } from "@/lib/types";
@@ -55,7 +55,9 @@ const FILTER_CHIPS: { label: string; value: CategoryFilter }[] = [
 ];
 
 export default function FridgePage() {
-  const [items, setItems] = useState<FridgeItem[]>(MOCK_FRIDGE_ITEMS);
+  const [items, setItems] = useState<FridgeItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<CategoryFilter>("ALL");
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -67,22 +69,49 @@ export default function FridgePage() {
   const [formExpiry, setFormExpiry] = useState("");
   const [formStorage, setFormStorage] = useState<StorageType>("FRIDGE");
 
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const data = await api.get<FridgeItem[]>("/fridge");
+        setItems(data);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "오류가 발생했어요");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (error) return (
+    <EmptyState icon="⚠️" message="데이터를 불러오지 못했어요" sub={error} />
+  );
+
   const visibleItems = items
     .filter((item) => !item.isConsumed)
     .filter((item) => activeFilter === "ALL" || item.category === activeFilter)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
-  const markConsumed = (id: string) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, isConsumed: true } : item))
-    );
+  const markConsumed = async (id: string) => {
+    try {
+      const updated = await api.patch<FridgeItem>(`/fridge/${id}/consume`);
+      setItems((prev) => prev.map((item) => (item.id === id ? updated : item)));
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "오류가 발생했어요");
+    }
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!formName.trim() || !formExpiry) return;
-    setItems((prev) => [
-      {
-        id: `fi-${Date.now()}`,
+    try {
+      const created = await api.post<FridgeItem>("/fridge", {
         registeredBy: "m1",
         name: formName.trim(),
         category: formCategory,
@@ -90,11 +119,11 @@ export default function FridgePage() {
         unit: formUnit,
         expirationDate: formExpiry,
         storageType: formStorage,
-        isConsumed: false,
-        createdAt: `${todayYMD()}T${new Date().toTimeString().slice(0, 8)}`,
-      },
-      ...prev,
-    ]);
+      });
+      setItems((prev) => [created, ...prev]);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "오류가 발생했어요");
+    }
     setModalOpen(false);
     setFormName("");
     setFormCategory("OTHER");
