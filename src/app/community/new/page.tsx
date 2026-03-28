@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 import type { Post } from "@/lib/types";
 
 export default function CommunityNewPage() {
   const navigate = useNavigate();
+  const { member } = useAuth();
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -15,7 +17,7 @@ export default function CommunityNewPage() {
     try {
       setSaving(true);
       await api.post<Post>("/posts", {
-        authorId: "m1",
+        authorId: member?.memberId,
         content: content.trim(),
         images: [],
       });

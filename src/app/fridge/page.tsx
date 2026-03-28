@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { TopHeader } from "@/components/layout/TopHeader";
+import { useAuth } from "@/context/AuthContext";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -9,6 +10,7 @@ import { api } from "@/lib/api";
 import type { FridgeItem } from "@/lib/types";
 
 export default function FridgePage() {
+  const { member: authUser } = useAuth();
   const [items, setItems] = useState<FridgeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +61,7 @@ export default function FridgePage() {
     if (!formName.trim()) return;
     try {
       const created = await api.post<FridgeItem>("/fridge", {
-        registeredBy: "m1",
+        registeredBy: authUser?.memberId,
         name: formName.trim(),
         category: "OTHER",
         quantity: Number(formQuantity) || 1,

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { TopHeader } from "@/components/layout/TopHeader";
+import { useAuth } from "@/context/AuthContext";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
@@ -19,6 +20,7 @@ const STATUS_CONFIG: Record<
 };
 
 export default function AttendancePage() {
+  const { member: authUser } = useAuth();
   const today = todayYMD();
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [attendances, setAttendances] = useState<AttendanceStatus[]>([]);
@@ -108,19 +110,23 @@ export default function AttendancePage() {
             const att = getAttendance(member.id);
             const status = (att?.status ?? "HOME") as keyof typeof STATUS_CONFIG;
             const config = STATUS_CONFIG[status];
+            const isMe = member.id === authUser?.memberId;
             return (
               <button
                 key={member.id}
-                onClick={() => openModal(member)}
-                className="text-left"
+                onClick={() => isMe && openModal(member)}
+                className={`text-left ${!isMe ? "cursor-default" : ""}`}
               >
-                <Card className={`flex flex-col items-center gap-3 py-5 ${config.bgColor} active:scale-[0.97] transition-transform`}>
+                <Card className={`flex flex-col items-center gap-3 py-5 ${config.bgColor} ${isMe ? "active:scale-[0.97] transition-transform" : "opacity-80"}`}>
                   <Avatar member={member} size="lg" />
                   <div className="text-center">
                     <p className="font-semibold text-text-base">{member.name}</p>
                     <Badge variant={config.badgeVariant} className="mt-1">
                       {config.label}
                     </Badge>
+                    {isMe && (
+                      <p className="text-xs text-text-muted mt-1">탭하여 변경</p>
+                    )}
                     {att?.memo && (
                       <p className="text-xs text-text-muted mt-0.5 truncate max-w-full">
                         {att.memo}
