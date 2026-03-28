@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { authStorage } from "@/lib/auth";
@@ -7,8 +7,12 @@ import type { FamilyMember } from "@/lib/types";
 export default function OAuthCallbackPage() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const called = useRef(false);
 
   useEffect(() => {
+    if (called.current) return;
+    called.current = true;
+
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
 
