@@ -1,25 +1,13 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const { login } = useAuth();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      await login();
-      navigate("/", { replace: true });
-    } catch (e) {
-      setError("로그인에 실패했어요. 다시 시도해주세요.");
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+  const handleLogin = () => {
+    setLoading(true);
+    login(); // 카카오 로그인 페이지로 리다이렉트
   };
 
   return (
@@ -70,10 +58,6 @@ export default function LoginPage() {
             </>
           )}
         </button>
-
-        {error && (
-          <p className="text-center text-sm text-danger">{error}</p>
-        )}
 
         <p className="text-center text-xs text-text-muted leading-relaxed">
           로그인 시 가족 그룹에 참여하거나<br />새로운 그룹을 만들 수 있어요

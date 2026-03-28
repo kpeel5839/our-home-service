@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { AppShell } from "@/components/layout/AppShell";
 
 import LoginPage from "@/app/login/page";
+import OAuthCallbackPage from "@/app/oauth/callback/page";
 import HomePage from "@/app/page";
 import LifePage from "@/app/life/page";
 import MenuPage from "@/app/menu/page";
@@ -64,6 +65,7 @@ export default function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<PublicRoute />} />
+          <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
           <Route path="/*" element={<PrivateRoutes />} />
         </Routes>
       </AuthProvider>

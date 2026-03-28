@@ -16,12 +16,9 @@ export function initKakao() {
   }
 }
 
-/** 카카오 팝업 로그인 → access_token 반환 */
-export function kakaoLogin(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    window.Kakao.Auth.login({
-      success: (authObj) => resolve(authObj.access_token),
-      fail: reject,
-    });
+/** 카카오 로그인 페이지로 리다이렉트 (SDK 2.x authorize 방식) */
+export function kakaoRedirect(): void {
+  window.Kakao.Auth.authorize({
+    redirectUri: `${window.location.origin}/oauth/callback`,
   });
 }

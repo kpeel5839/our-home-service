@@ -1,12 +1,12 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { authStorage, initKakao, kakaoLogin } from "@/lib/auth";
+import { authStorage, initKakao, kakaoRedirect } from "@/lib/auth";
 import type { FamilyMember } from "@/lib/types";
 
 interface AuthContextValue {
   member: FamilyMember | null;
   loading: boolean;
-  login: () => Promise<void>;
+  login: () => void;
   logout: () => void;
 }
 
@@ -35,15 +35,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     restore();
   }, []);
 
-  const login = async () => {
-    const kakaoToken = await kakaoLogin();
-    // 백엔드로 카카오 토큰 전달 → JWT + 멤버 정보 반환
-    const { token, member: me } = await api.post<{ token: string; member: FamilyMember }>(
-      "/auth/kakao",
-      { accessToken: kakaoToken }
-    );
-    authStorage.setToken(token);
-    setMember(me);
+  const login = () => {
+    kakaoRedirect();
   };
 
   const logout = () => {
