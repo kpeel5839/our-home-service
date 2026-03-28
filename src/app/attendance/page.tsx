@@ -16,7 +16,6 @@ const STATUS_CONFIG: Record<
 > = {
   HOME: { label: "귀가 예정", badgeVariant: "success", bgColor: "bg-green-50" },
   OUT: { label: "외박", badgeVariant: "primary", bgColor: "bg-blue-50" },
-  UNKNOWN: { label: "미정", badgeVariant: "default", bgColor: "bg-gray-50" },
 };
 
 export default function AttendancePage() {
@@ -107,7 +106,7 @@ export default function AttendancePage() {
         <div className="grid grid-cols-2 gap-3">
           {members.map((member) => {
             const att = getAttendance(member.id);
-            const status = att?.status ?? "UNKNOWN";
+            const status = (att?.status ?? "HOME") as keyof typeof STATUS_CONFIG;
             const config = STATUS_CONFIG[status];
             return (
               <button
