@@ -60,7 +60,7 @@ export default function VehicleFuelPage() {
           </button>
         }
       />
-      <div className="px-4 py-5 max-w-2xl mx-auto space-y-4">
+      <div className="px-4 py-5 max-w-2xl tablet:max-w-3xl mx-auto space-y-4">
         {/* 요약 카드 */}
         <Card>
           <div className="flex items-center gap-3 mb-4">
@@ -71,7 +71,7 @@ export default function VehicleFuelPage() {
               <p className="font-semibold text-text-base">{vehicle.name}</p>
               <p className="text-xs text-text-muted">주유 기록 요약</p>
             </div>
-            <Button size="sm" onClick={() => setModalOpen(true)} className="ml-auto hidden md:flex">
+            <Button size="sm" onClick={() => setModalOpen(true)} className="ml-auto hidden lg:flex">
               <Plus size={16} />
               기록 추가
             </Button>

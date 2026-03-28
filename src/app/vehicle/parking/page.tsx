@@ -62,7 +62,7 @@ export default function VehicleParkingPage() {
           </button>
         }
       />
-      <div className="px-4 py-5 max-w-2xl mx-auto space-y-4">
+      <div className="px-4 py-5 max-w-2xl tablet:max-w-3xl mx-auto space-y-4">
         {/* 현재 주차 위치 */}
         <section>
           <h2 className="text-sm font-semibold text-text-muted mb-2">현재 주차 위치</h2>

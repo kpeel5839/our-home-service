@@ -94,7 +94,7 @@ export default function VehicleReservePage() {
           </button>
         }
       />
-      <div className="px-4 py-5 max-w-2xl mx-auto space-y-4">
+      <div className="px-4 py-5 max-w-2xl tablet:max-w-3xl mx-auto space-y-4">
         {/* 차량 정보 */}
         <Card className="flex items-center gap-4 p-4">
           <div className="w-12 h-12 bg-primary-light rounded-xl flex items-center justify-center text-2xl">

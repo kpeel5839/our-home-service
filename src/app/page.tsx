@@ -44,14 +44,14 @@ export default function HomePage() {
   );
 
   return (
-    <div className="px-4 py-5 max-w-2xl mx-auto">
+    <div className="px-4 py-5 max-w-2xl tablet:max-w-3xl mx-auto">
       {/* 인사 헤더 */}
       <div className="mb-6">
         <p className="text-text-muted text-sm">{dateLabel}</p>
         <h1 className="text-2xl font-bold text-text-base mt-0.5">{greeting} 👋</h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 tablet:grid-cols-2 gap-4">
         {/* 오늘의 메뉴 */}
         <DashboardCard title="오늘의 메뉴" icon={<UtensilsCrossed size={18} />} href="/menu" accentColor="#FF8C69">
           {todayMenus.length === 0 ? (

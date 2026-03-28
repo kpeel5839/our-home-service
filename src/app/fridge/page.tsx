@@ -117,8 +117,8 @@ export default function FridgePage() {
   return (
     <>
       <TopHeader title="냉장고 재고" showBack />
-      <div className="px-4 py-5 max-w-2xl mx-auto pb-24">
-        <div className="mb-4 hidden md:block">
+      <div className="px-4 py-5 max-w-2xl tablet:max-w-3xl mx-auto pb-24">
+        <div className="mb-4 hidden lg:block">
           <h1 className="text-2xl font-bold text-text-base">냉장고 재고</h1>
         </div>
 
@@ -189,7 +189,7 @@ export default function FridgePage() {
       {/* FAB */}
       <button
         onClick={() => setModalOpen(true)}
-        className="fixed bottom-24 right-4 md:bottom-6 md:right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform z-30"
+        className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform z-30"
       >
         <Plus size={24} />
       </button>

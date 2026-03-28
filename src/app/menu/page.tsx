@@ -71,8 +71,8 @@ export default function MenuPage() {
   return (
     <>
       <TopHeader title="오늘의 메뉴" showBack />
-      <div className="px-4 py-5 max-w-2xl mx-auto">
-        <div className="mb-5 hidden md:block">
+      <div className="px-4 py-5 max-w-2xl tablet:max-w-3xl mx-auto">
+        <div className="mb-5 hidden lg:block">
           <h1 className="text-2xl font-bold text-text-base">오늘의 메뉴</h1>
         </div>
         <div className="flex flex-col gap-3">

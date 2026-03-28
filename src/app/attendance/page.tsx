@@ -65,8 +65,8 @@ export default function AttendancePage() {
   return (
     <>
       <TopHeader title="귀가/외박 현황" showBack />
-      <div className="px-4 py-5 max-w-2xl mx-auto">
-        <div className="mb-5 hidden md:block">
+      <div className="px-4 py-5 max-w-2xl tablet:max-w-3xl mx-auto">
+        <div className="mb-5 hidden lg:block">
           <h1 className="text-2xl font-bold text-text-base">귀가/외박 현황</h1>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -93,7 +93,7 @@ export default function AttendancePage() {
                       </p>
                     )}
                     {att?.memo && (
-                      <p className="text-xs text-text-muted mt-0.5 truncate max-w-[100px]">
+                      <p className="text-xs text-text-muted mt-0.5 truncate max-w-full">
                         {att.memo}
                       </p>
                     )}

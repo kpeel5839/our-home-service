@@ -81,8 +81,8 @@ export default function CleaningPage() {
           </button>
         }
       />
-      <div className="px-4 py-5 max-w-2xl mx-auto space-y-4">
-        <div className="flex items-center justify-between hidden md:flex">
+      <div className="px-4 py-5 max-w-2xl tablet:max-w-3xl mx-auto space-y-4">
+        <div className="hidden lg:flex items-center justify-between">
           <h1 className="text-2xl font-bold text-text-base">청소 담당</h1>
           <Button size="sm" onClick={() => setModalOpen(true)}>
             <Plus size={16} />

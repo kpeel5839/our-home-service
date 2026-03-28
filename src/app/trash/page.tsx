@@ -90,7 +90,7 @@ export default function TrashPage() {
   return (
     <>
       <TopHeader title="쓰레기 담당" showBack />
-      <div className="px-4 py-5 max-w-2xl mx-auto space-y-4">
+      <div className="px-4 py-5 max-w-2xl tablet:max-w-3xl mx-auto space-y-4">
         {/* 오늘 일정 */}
         <section>
           <h2 className="text-sm font-semibold text-text-muted mb-2">오늘</h2>

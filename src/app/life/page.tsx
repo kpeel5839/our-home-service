@@ -59,8 +59,8 @@ export default function LifePage() {
   return (
     <>
       <TopHeader title="생활관리" />
-      <div className="px-4 py-5 max-w-2xl mx-auto">
-        <div className="mb-5 hidden md:block">
+      <div className="px-4 py-5 max-w-2xl tablet:max-w-3xl mx-auto">
+        <div className="mb-5 hidden lg:block">
           <h1 className="text-2xl font-bold text-text-base">생활관리</h1>
           <p className="text-sm text-text-muted mt-1">가족의 일상을 함께 관리해요</p>
         </div>

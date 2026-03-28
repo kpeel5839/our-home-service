@@ -67,7 +67,7 @@ export default function CommunityDetailPage() {
   return (
     <>
       <TopHeader title="게시글" showBack />
-      <div className="max-w-2xl mx-auto pb-32">
+      <div className="max-w-2xl tablet:max-w-3xl mx-auto pb-32">
         {/* 이미지 갤러리 */}
         {post.images.length > 0 && (
           <div className="flex gap-2 overflow-x-auto px-4 py-4 scrollbar-hide">
@@ -145,7 +145,7 @@ export default function CommunityDetailPage() {
       </div>
 
       {/* 댓글 입력창 */}
-      <div className="fixed bottom-16 md:bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 md:max-w-2xl md:mx-auto">
+      <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 lg:left-64 bg-white border-t border-gray-100 px-4 py-3">
         <div className="flex gap-2">
           <input
             type="text"

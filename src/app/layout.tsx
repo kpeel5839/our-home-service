@@ -12,6 +12,11 @@ const notoSansKR = Noto_Sans_KR({
 export const metadata: Metadata = {
   title: "우리 집 | 가족 생활 관리",
   description: "가족을 위한 스마트 생활 관리 서비스",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
 };
 
 export const viewport: Viewport = {

@@ -16,8 +16,8 @@ export default function CommunityPage() {
   return (
     <>
       <TopHeader title="가족 피드" />
-      <div className="px-4 py-5 max-w-2xl mx-auto pb-24 space-y-4">
-        <div className="mb-2 hidden md:block">
+      <div className="px-4 py-5 max-w-2xl tablet:max-w-3xl mx-auto pb-24 space-y-4">
+        <div className="mb-2 hidden lg:block">
           <h1 className="text-2xl font-bold text-text-base">가족 피드</h1>
         </div>
         {sorted.map((post) => {
@@ -71,7 +71,7 @@ export default function CommunityPage() {
       {/* FAB */}
       <Link
         href="/community/new"
-        className="fixed bottom-24 right-4 md:bottom-6 md:right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform z-30"
+        className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform z-30"
       >
         <Plus size={24} />
       </Link>

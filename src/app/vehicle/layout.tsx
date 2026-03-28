@@ -16,8 +16,8 @@ export default function VehicleLayout({ children }: { children: React.ReactNode 
   return (
     <div>
       {/* 탭 네비게이션 */}
-      <div className="sticky top-14 md:top-0 z-20 bg-white border-b border-gray-100">
-        <div className="flex max-w-2xl mx-auto px-4">
+      <div className="sticky top-14 lg:top-0 z-20 bg-white border-b border-gray-100">
+        <div className="flex max-w-2xl tablet:max-w-3xl mx-auto px-4">
           {VEHICLE_TABS.map((tab) => {
             const isActive = pathname === tab.href;
             return (

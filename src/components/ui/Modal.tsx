@@ -30,7 +30,8 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+    // tablet(882px, Fold 펼침) 이상에서는 중앙 다이얼로그, 이하에서는 바텀시트
+    <div className="fixed inset-0 z-50 flex items-end tablet:items-center justify-center">
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in"
@@ -40,15 +41,15 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
       <div
         className={cn(
           "relative z-10 bg-white w-full animate-slide-up",
-          "rounded-t-2xl md:rounded-2xl md:max-w-lg md:mx-4",
+          "rounded-t-2xl tablet:rounded-2xl tablet:max-w-lg tablet:mx-4",
           "max-h-[90vh] overflow-y-auto",
           className
         )}
         role="dialog"
         aria-modal="true"
       >
-        {/* Handle (모바일) */}
-        <div className="flex justify-center pt-3 pb-1 md:hidden">
+        {/* 드래그 핸들 (Fold 접힘 & 일반 폰에서만 표시) */}
+        <div className="flex justify-center pt-3 pb-1 tablet:hidden">
           <div className="w-10 h-1 rounded-full bg-gray-200" />
         </div>
         {/* Header */}

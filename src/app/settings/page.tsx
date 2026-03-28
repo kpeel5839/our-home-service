@@ -48,8 +48,8 @@ export default function SettingsPage() {
   return (
     <>
       <TopHeader title="설정" />
-      <div className="px-4 py-5 max-w-2xl mx-auto space-y-5">
-        <div className="mb-2 hidden md:block">
+      <div className="px-4 py-5 max-w-2xl tablet:max-w-3xl mx-auto space-y-5">
+        <div className="mb-2 hidden lg:block">
           <h1 className="text-2xl font-bold text-text-base">설정</h1>
         </div>
 
