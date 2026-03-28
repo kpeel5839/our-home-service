@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
@@ -35,6 +37,8 @@ const CURRENT_USER_ID = "m1";
 
 export default function SettingsPage() {
   const [members, setMembers] = useState<FamilyMember[]>([]);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Record<string, boolean>>(
@@ -147,6 +151,16 @@ export default function SettingsPage() {
             <InfoRow label="버전" value="1.0.0" />
             <InfoRow label="개발" value="우리 가족" />
           </Card>
+        </section>
+
+        {/* 로그아웃 */}
+        <section>
+          <button
+            onClick={() => { logout(); navigate("/login", { replace: true }); }}
+            className="w-full py-4 rounded-2xl bg-white text-danger font-semibold text-sm shadow-sm active:opacity-80 transition-opacity"
+          >
+            로그아웃
+          </button>
         </section>
       </div>
     </>
