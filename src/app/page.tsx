@@ -1,6 +1,6 @@
 import {
   UtensilsCrossed, Trash2, Users, Car,
-  Refrigerator, SprayCanIcon as Spray
+  Refrigerator, SprayCan as Spray
 } from "lucide-react";
 import { DashboardCard } from "@/components/dashboard/DashboardCard";
 import { Avatar } from "@/components/ui/Avatar";

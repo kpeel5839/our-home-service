@@ -1,7 +1,4 @@
-"use client";
-
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, useLocation } from "react-router-dom";
 import { Home, LayoutGrid, Car, MessageCircle, Settings } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -14,7 +11,7 @@ const TABS = [
 ];
 
 export function BottomTabBar() {
-  const pathname = usePathname();
+  const { pathname } = useLocation();
 
   const isActive = (tab: (typeof TABS)[number]) => {
     if (tab.exact) return pathname === tab.href;
@@ -28,7 +25,7 @@ export function BottomTabBar() {
         {TABS.map((tab) => (
           <Link
             key={tab.href}
-            href={tab.href}
+            to={tab.href}
             className={cn(
               "flex-1 flex flex-col items-center justify-center py-2 gap-0.5 min-h-[56px] transition-colors",
               isActive(tab) ? "text-primary" : "text-text-muted"

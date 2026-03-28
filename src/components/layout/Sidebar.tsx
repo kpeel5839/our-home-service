@@ -1,9 +1,6 @@
-"use client";
-
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, useLocation } from "react-router-dom";
 import {
-  Home, UtensilsCrossed, Trash2, SprayCanIcon as Spray, Users,
+  Home, UtensilsCrossed, Trash2, SprayCan as Spray, Users,
   Car, MessageCircle, Refrigerator, Settings, Fuel, ParkingSquare
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
@@ -29,7 +26,7 @@ const VEHICLE_ITEMS: NavItem[] = [
 ];
 
 export function Sidebar() {
-  const pathname = usePathname();
+  const { pathname } = useLocation();
 
   const isActive = (href: string, exact = false) => {
     if (exact) return pathname === href;
@@ -79,7 +76,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function NavLink({ href, icon, label, active }: { href: string; icon: React.ReactNode; label: string; active: boolean }) {
   return (
     <Link
-      href={href}
+      to={href}
       className={cn(
         "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors mb-0.5",
         active ? "bg-primary-light text-primary" : "text-text-base hover:bg-gray-50"

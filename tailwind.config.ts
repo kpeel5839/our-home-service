@@ -2,9 +2,8 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
@@ -31,7 +30,7 @@ const config: Config = {
         "text-muted": "#8B8B8B",
       },
       fontFamily: {
-        sans: ["var(--font-noto)", "sans-serif"],
+        sans: ["Noto Sans KR", "sans-serif"],
       },
       keyframes: {
         "slide-up": {

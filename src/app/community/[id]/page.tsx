@@ -1,8 +1,5 @@
-"use client";
-
 import { useState } from "react";
-import { useParams } from "next/navigation";
-import Image from "next/image";
+import { useParams } from "react-router-dom";
 import { Heart } from "lucide-react";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { Avatar } from "@/components/ui/Avatar";
@@ -51,7 +48,7 @@ export default function CommunityDetailPage() {
     if (!commentInput.trim()) return;
     const newComment: Comment = {
       id: `cm-${Date.now()}`,
-      postId: id,
+      postId: id!,
       authorId: "m1",
       content: commentInput.trim(),
       createdAt: new Date().toISOString(),
@@ -74,9 +71,9 @@ export default function CommunityDetailPage() {
             {post.images.map((img, idx) => (
               <div
                 key={idx}
-                className="relative flex-shrink-0 w-64 h-48 rounded-2xl overflow-hidden"
+                className="flex-shrink-0 w-64 h-48 rounded-2xl overflow-hidden"
               >
-                <Image src={img} alt={`이미지 ${idx + 1}`} fill className="object-cover" />
+                <img src={img} alt={`이미지 ${idx + 1}`} className="w-full h-full object-cover" />
               </div>
             ))}
           </div>

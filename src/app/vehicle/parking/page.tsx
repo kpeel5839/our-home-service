@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { Plus, MapPin } from "lucide-react";
 import { TopHeader } from "@/components/layout/TopHeader";

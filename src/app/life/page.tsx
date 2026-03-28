@@ -1,8 +1,8 @@
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import {
   UtensilsCrossed,
   Trash2,
-  SprayCanIcon as Spray,
+  SprayCan as Spray,
   Users,
   Refrigerator,
 } from "lucide-react";
@@ -66,7 +66,7 @@ export default function LifePage() {
         </div>
         <div className="grid grid-cols-1 gap-3">
           {LIFE_MENU_ITEMS.map((item) => (
-            <Link key={item.href} href={item.href} className="block">
+            <Link key={item.href} to={item.href} className="block">
               <Card className="flex items-center gap-4 p-4 active:scale-[0.98] transition-transform">
                 <div
                   className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"

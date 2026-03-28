@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -39,7 +39,7 @@ export function DashboardCard({
   );
 
   if (href) {
-    return <Link href={href} className="block">{content}</Link>;
+    return <Link to={href} className="block">{content}</Link>;
   }
   return content;
 }

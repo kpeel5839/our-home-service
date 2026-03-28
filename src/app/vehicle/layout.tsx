@@ -1,7 +1,4 @@
-"use client";
-
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils/cn";
 
 const VEHICLE_TABS = [
@@ -10,8 +7,8 @@ const VEHICLE_TABS = [
   { label: "주차", href: "/vehicle/parking" },
 ];
 
-export default function VehicleLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+export default function VehicleLayout() {
+  const { pathname } = useLocation();
 
   return (
     <div>
@@ -23,7 +20,7 @@ export default function VehicleLayout({ children }: { children: React.ReactNode 
             return (
               <Link
                 key={tab.href}
-                href={tab.href}
+                to={tab.href}
                 className={cn(
                   "flex-1 py-3 text-sm font-medium text-center transition-colors min-h-[44px] flex items-center justify-center",
                   isActive
@@ -37,7 +34,7 @@ export default function VehicleLayout({ children }: { children: React.ReactNode 
           })}
         </div>
       </div>
-      {children}
+      <Outlet />
     </div>
   );
 }

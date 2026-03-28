@@ -1,6 +1,4 @@
-"use client";
-
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -12,7 +10,7 @@ interface TopHeaderProps {
 }
 
 export function TopHeader({ title, showBack, right, className }: TopHeaderProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
 
   return (
     // lg(1024px) 이상에서는 사이드바가 있으므로 TopHeader 숨김
@@ -25,7 +23,7 @@ export function TopHeader({ title, showBack, right, className }: TopHeaderProps)
     >
       {showBack && (
         <button
-          onClick={() => router.back()}
+          onClick={() => navigate(-1)}
           className="min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2 text-text-base"
         >
           <ChevronLeft size={24} />

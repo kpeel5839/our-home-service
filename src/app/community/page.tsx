@@ -1,5 +1,4 @@
-import Link from "next/link";
-import Image from "next/image";
+import { Link } from "react-router-dom";
 import { Plus, Heart, MessageCircle } from "lucide-react";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { Card } from "@/components/ui/Card";
@@ -24,16 +23,15 @@ export default function CommunityPage() {
           const author = getMemberById(post.authorId);
           if (!author) return null;
           return (
-            <Link key={post.id} href={`/community/${post.id}`} className="block">
+            <Link key={post.id} to={`/community/${post.id}`} className="block">
               <Card className="p-0 overflow-hidden active:scale-[0.99] transition-transform">
                 {/* 첫 번째 이미지 */}
                 {post.images.length > 0 && (
-                  <div className="relative w-full h-48">
-                    <Image
+                  <div className="w-full h-48 overflow-hidden">
+                    <img
                       src={post.images[0]}
                       alt="게시글 이미지"
-                      fill
-                      className="object-cover"
+                      className="w-full h-full object-cover"
                     />
                   </div>
                 )}
@@ -70,7 +68,7 @@ export default function CommunityPage() {
 
       {/* FAB */}
       <Link
-        href="/community/new"
+        to="/community/new"
         className="fixed bottom-24 right-4 lg:bottom-6 lg:right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform z-30"
       >
         <Plus size={24} />
