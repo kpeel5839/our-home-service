@@ -26,7 +26,7 @@ export default function AttendancePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
-  const [editStatus, setEditStatus] = useState<AttendanceStatusType>("UNKNOWN");
+  const [editStatus, setEditStatus] = useState<AttendanceStatusType>("HOME");
   const [editReturnTime, setEditReturnTime] = useState("");
   const [editMemo, setEditMemo] = useState("");
 
@@ -65,7 +65,7 @@ export default function AttendancePage() {
   const openModal = (member: FamilyMember) => {
     const att = getAttendance(member.id);
     setSelectedMember(member);
-    setEditStatus(att?.status ?? "UNKNOWN");
+    setEditStatus(att?.status ?? "HOME");
     setEditReturnTime(att?.expectedReturnTime ?? "");
     setEditMemo(att?.memo ?? "");
   };
@@ -122,11 +122,6 @@ export default function AttendancePage() {
                     <Badge variant={config.badgeVariant} className="mt-1">
                       {config.label}
                     </Badge>
-                    {att?.expectedReturnTime && (
-                      <p className="text-xs text-text-muted mt-1">
-                        귀가 예정 {att.expectedReturnTime}
-                      </p>
-                    )}
                     {att?.memo && (
                       <p className="text-xs text-text-muted mt-0.5 truncate max-w-full">
                         {att.memo}
@@ -165,21 +160,6 @@ export default function AttendancePage() {
               ))}
             </div>
           </div>
-
-          {/* 귀가 예상 시간 */}
-          {editStatus === "HOME" && (
-            <div>
-              <label className="block text-sm font-medium text-text-base mb-1.5">
-                귀가 예상 시간
-              </label>
-              <input
-                type="time"
-                value={editReturnTime}
-                onChange={(e) => setEditReturnTime(e.target.value)}
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-              />
-            </div>
-          )}
 
           {/* 메모 */}
           <div>
