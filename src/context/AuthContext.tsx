@@ -1,10 +1,16 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { authStorage, initKakao, kakaoRedirect } from "@/lib/auth";
-import type { FamilyMember } from "@/lib/types";
+
+interface AuthUser {
+  kakaoId: string;
+  memberId: string | null;
+  nickname: string;
+  profileImageUrl: string | null;
+}
 
 interface AuthContextValue {
-  member: FamilyMember | null;
+  member: AuthUser | null;
   loading: boolean;
   login: () => void;
   logout: () => void;
@@ -13,7 +19,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [member, setMember] = useState<FamilyMember | null>(null);
+  const [member, setMember] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   // 앱 시작 시 저장된 토큰으로 사용자 정보 복원
@@ -24,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = authStorage.getToken();
       if (!token) { setLoading(false); return; }
       try {
-        const me = await api.get<FamilyMember>("/auth/me");
+        const me = await api.get<AuthUser>("/auth/me");
         setMember(me);
       } catch {
         authStorage.removeToken();

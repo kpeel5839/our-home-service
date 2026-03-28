@@ -23,11 +23,11 @@ export default function OAuthCallbackPage() {
 
     const finish = async () => {
       try {
-        const { token } = await api.post<{ token: string; member: FamilyMember }>(
+        const { accessToken } = await api.post<{ accessToken: string; memberId: string; nickname: string }>(
           "/auth/kakao",
           { code }
         );
-        authStorage.setToken(token);
+        authStorage.setToken(accessToken);
         navigate("/", { replace: true });
       } catch (e) {
         console.error(e);
