@@ -7,23 +7,18 @@ const config: Config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    // 기기별 breakpoint
-    // base(0px)  : Galaxy Fold 접힘 344px 포함
-    // xs(375px)  : iPhone 17 Pro, 일반 소형 폰
-    // sm(412px)  : Galaxy S23 Ultra
-    // md(768px)  : 태블릿 기준 (사이드바 등장 전)
-    // tablet(882px): Galaxy Fold 펼침 상태
-    // lg(1024px) : 노트북/데스크탑 — 사이드바 등장
-    screens: {
-      xs: "375px",
-      sm: "412px",
-      md: "768px",
-      tablet: "882px",
-      lg: "1024px",
-      xl: "1280px",
-      "2xl": "1536px",
-    },
     extend: {
+      // 기기별 breakpoint (기본값 유지 + 커스텀 추가)
+      // base(0px)   : Galaxy Fold 접힘 344px 포함
+      // xs(375px)   : iPhone 17 Pro / 일반 소형 폰 (NEW)
+      // sm(640px)   : Tailwind 기본값 유지
+      // md(768px)   : Tailwind 기본값 유지
+      // tablet(882px): Galaxy Fold 5/7 펼침 상태 (NEW)
+      // lg(1024px)  : 노트북/데스크탑 — 사이드바 등장
+      screens: {
+        xs: "375px",
+        tablet: "882px",
+      },
       colors: {
         primary: "#FF8C69",
         "primary-light": "#FFF0EB",
