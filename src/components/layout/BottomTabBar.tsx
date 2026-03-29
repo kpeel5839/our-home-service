@@ -1,12 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, LayoutGrid, Car, MessageCircle, Settings } from "lucide-react";
+import { Home, LayoutGrid, Car, TrendingUp, Settings } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 const TABS = [
   { label: "홈", icon: <Home size={22} />, href: "/", exact: true },
   { label: "생활", icon: <LayoutGrid size={22} />, href: "/life" },
   { label: "차량", icon: <Car size={22} />, href: "/vehicle" },
-  { label: "피드", icon: <MessageCircle size={22} />, href: "/community" },
+  { label: "주식", icon: <TrendingUp size={22} />, href: "/stocks" },
   { label: "설정", icon: <Settings size={22} />, href: "/settings" },
 ];
 
@@ -34,7 +34,6 @@ export function BottomTabBar() {
             <span className={cn("transition-transform", isActive(tab) && "scale-110")}>
               {tab.icon}
             </span>
-            {/* 344px(fold 접힘)에서도 레이블이 잘리지 않도록 text-[9px], xs(375px)부터 text-[10px] */}
             <span className="text-[9px] xs:text-[10px] font-medium">{tab.label}</span>
           </Link>
         ))}
