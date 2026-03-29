@@ -15,6 +15,7 @@ import VehicleLayout from "@/app/vehicle/layout";
 import VehicleReservePage from "@/app/vehicle/reserve/page";
 import VehicleFuelPage from "@/app/vehicle/fuel/page";
 import VehicleParkingPage from "@/app/vehicle/parking/page";
+import StocksPage from "@/app/stocks/page";
 import CommunityPage from "@/app/community/page";
 import CommunityNewPage from "@/app/community/new/page";
 import CommunityDetailPage from "@/app/community/[id]/page";
@@ -51,6 +52,7 @@ function PrivateRoutes() {
           <Route path="fuel" element={<VehicleFuelPage />} />
           <Route path="parking" element={<VehicleParkingPage />} />
         </Route>
+        <Route path="/stocks" element={<StocksPage />} />
         <Route path="/community" element={<CommunityPage />} />
         <Route path="/community/new" element={<CommunityNewPage />} />
         <Route path="/community/:id" element={<CommunityDetailPage />} />

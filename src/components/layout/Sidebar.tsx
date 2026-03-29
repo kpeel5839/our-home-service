@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import {
   Home, UtensilsCrossed, Trash2, SprayCan as Spray, Users,
-  Car, MessageCircle, Refrigerator, Settings, Fuel, ParkingSquare
+  Car, MessageCircle, Refrigerator, Settings, Fuel, ParkingSquare, TrendingUp
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -56,6 +56,7 @@ export function Sidebar() {
 
         <SectionLabel>커뮤니티</SectionLabel>
         <NavLink href="/community" icon={<MessageCircle size={18} />} label="가족 피드" active={isActive("/community")} />
+        <NavLink href="/stocks" icon={<TrendingUp size={18} />} label="주식" active={isActive("/stocks")} />
       </nav>
 
       <div className="border-t border-gray-100 px-3 py-3">
