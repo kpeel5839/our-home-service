@@ -9,7 +9,8 @@ import { authStorage } from "./auth";
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const token = authStorage.getToken();
+  const rawToken = authStorage.getToken();
+  const token = rawToken && rawToken !== "undefined" && rawToken !== "null" ? rawToken : null;
 
   const res = await fetch(`${BASE_URL}${path}`, {
     headers: {

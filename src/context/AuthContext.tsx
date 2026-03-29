@@ -27,8 +27,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initKakao();
 
     const restore = async () => {
-      const token = authStorage.getToken();
-      if (!token) { setLoading(false); return; }
+      const rawToken = authStorage.getToken();
+      const token = rawToken && rawToken !== "undefined" && rawToken !== "null" ? rawToken : null;
+      if (!token) { authStorage.removeToken(); setLoading(false); return; }
       try {
         const me = await api.get<AuthUser>("/auth/me");
         setMember(me);
